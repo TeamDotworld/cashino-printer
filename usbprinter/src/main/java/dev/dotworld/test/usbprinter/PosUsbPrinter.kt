@@ -87,6 +87,26 @@ object PosUsbPrinter {
         return mDevice
     }
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    fun getConnectedDevices(): ArrayList<UsbDevice> {
+        Log.d(TAG, "searchAndSelectUsbPost: start")
+        var device: UsbDevice? = null
+        val deviceName: List<String> = mDeviceList.keys.map { it }
+        var d: Array<String?> = arrayOfNulls(deviceName.size)
+        val deviceIterator: Iterator<UsbDevice> = mDeviceList.values.iterator()
+        while (deviceIterator.hasNext()) {
+            val d = deviceIterator.next()
+            Log.d(TAG, "searchAndSelectUsbPost: devices = $d")
+            if (d.configurationCount != 0){
+                if (d.getConfiguration(0).getInterface(0).interfaceClass == UsbConstants.USB_CLASS_PRINTER
+                ) {
+                    devices.add(d)
+                }
+            }
+        }
+        return devices
+    }
+
     fun usbPrintOpen(context: Context) {
         executorService.submit(
             TaskOpen(

@@ -2,6 +2,8 @@ package dev.testing.cashinoprinter
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlertDialog
+import android.content.DialogInterface
 import android.graphics.Bitmap
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
@@ -11,6 +13,8 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import dev.testing.cashinoprinter.utils.generateImage
 import dev.dotworld.test.usbprinter.PosUsbPrinter
+import dev.dotworld.test.usbprinter.PosUsbPrinter.getConnectedDevices
+import dev.dotworld.test.usbprinter.PosUsbPrinter.usbPrintOpen
 import dev.testing.cashinoprinter.databinding.ActivityMainBinding
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -18,12 +22,27 @@ import java.util.Date
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view: View = binding!!.root
         setContentView(view)
         PosUsbPrinter.posSetup(this)
+        binding.printerList.setOnClickListener {
+
+            val device = getConnectedDevices()
+            var deviceName: Array<String?> = arrayOfNulls(device.size)
+            device.forEachIndexed { index, usbDevice ->
+                usbDevice.productName.let { it1 -> deviceName[index] = it1 }
+            }
+            AlertDialog.Builder(this)
+                .setTitle("Select Printer")
+                .setItems(deviceName, DialogInterface.OnClickListener() { _, p ->
+                    binding.printerId.text="${device[p]?.productId} / ${device[p]?.vendorId} \n ${device[p].productName}"
+                    usbPrintOpen(this,mDevice = device[p])
+                }).create().show()
+        }
         binding.printerScan.setOnClickListener {
             val device=PosUsbPrinter.searchAndSelectUsbPost(this@MainActivity)
             Log.d(TAG, "onCreate: device =$device ")
