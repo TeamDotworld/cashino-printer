@@ -52,6 +52,7 @@ object PosUsbPrinter {
     fun searchAndSelectUsbPost(context: Context): UsbDevice? {
         Log.d(TAG, "searchAndSelectUsbPost: start")
         var device: UsbDevice? = null
+        devices.clear()
         val deviceName: List<String> = mDeviceList.keys.map { it }
         var d: Array<String?> = arrayOfNulls(deviceName.size)
         val deviceIterator: Iterator<UsbDevice> = mDeviceList.values.iterator()
@@ -91,6 +92,7 @@ object PosUsbPrinter {
     fun getConnectedDevices(): ArrayList<UsbDevice> {
         Log.d(TAG, "searchAndSelectUsbPost: start")
         var device: UsbDevice? = null
+        devices.clear()
         val deviceName: List<String> = mDeviceList.keys.map { it }
         var d: Array<String?> = arrayOfNulls(deviceName.size)
         val deviceIterator: Iterator<UsbDevice> = mDeviceList.values.iterator()

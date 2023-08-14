@@ -50,19 +50,14 @@ public class Prints {
                     return bPrintResult = -5;
                 else {
                     for (int i = 0; i < nCount; i++) {
-
                         if (!pos.GetIO().IsOpened())
                             break;
-
                         if (nPrintContent == 1) {
-
                             pos.POS_Reset();
                             pos.POS_FeedLine();
                             if (img != null) {
                                 pos.POS_S_Align(1);
-                                pos.POS_S_TextOut("sample image", 50, 10, 0, 4, 0x08);
                                 pos.POS_PrintPicture(img, 550, 1, 0);
-                                pos.POS_S_SetQRcode("hello world",16,16,2);
                                 pos.POS_FeedLine();
                                 pos.POS_FeedLine();
                                 pos.POS_FeedLine();

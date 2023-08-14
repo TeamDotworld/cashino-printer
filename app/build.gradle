@@ -5,15 +5,15 @@ plugins {
 
 android {
     namespace 'dev.testing.cashinoprinter'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "dev.testing.cashinoprinter"
         minSdk 24
-        targetSdk 33
+        targetSdk 34
         versionCode 1
         versionName "1.0"
-
+        archivesBaseName = "printer-" + versionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 

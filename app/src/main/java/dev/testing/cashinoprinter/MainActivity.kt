@@ -11,14 +11,14 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import dev.testing.cashinoprinter.utils.generateImage
 import dev.dotworld.test.usbprinter.PosUsbPrinter
 import dev.dotworld.test.usbprinter.PosUsbPrinter.getConnectedDevices
 import dev.dotworld.test.usbprinter.PosUsbPrinter.usbPrintOpen
+import dev.testing.cashinoprinter.bill.BillData
+import dev.testing.cashinoprinter.bill.generateImage
 import dev.testing.cashinoprinter.databinding.ActivityMainBinding
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.util.Date
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -59,7 +59,29 @@ class MainActivity : AppCompatActivity() {
             printReceipt(this)
         }
         binding.createBitmap.setOnClickListener {
-            createBitmap(this)
+            GlobalScope.launch {
+                val b = createBitmap(
+                    this@MainActivity,
+                    BillData(
+                        paid = "Not Paid",
+                        token = "NKIOSKG3001",
+                        date = "2023-08-11",
+                        patientDetails = "Arun Kumar/25yrs/M, A123123",
+                        docterName = "Dr.Aby Thomas",
+                        transId = "8fi000w9w2",
+                        rrn = "R72345",
+                        billNo = "B8232323",
+                        consultationFee = "400",
+                        totalFee = "500",
+                        generatedDate = "400"
+                    )
+                )
+                if (b != null) {
+                    runOnUiThread() {
+                        binding.htmlToBitmap.setImageBitmap(b)
+                    }
+                }
+            }
         }
         binding.printerClose.setOnClickListener {
             PosUsbPrinter.usbPrintClose()
@@ -71,29 +93,27 @@ class MainActivity : AppCompatActivity() {
 
 
     @SuppressLint("UseCompatLoadingForDrawables")
-    private fun printReceipt(activity: Activity, data: Map<String, Any> = mapOf(
-        "date" to Date().toLocaleString(),
-        "mode" to 12,
-        "amount" to 13000,
-        "customerId" to "12D233",
-        "transactionId" to "12DDDD3DQE",
-        "advance" to "2000"
-    )) {
+    private fun printReceipt(activity: Activity) {
         Log.d(TAG, "printReceipt: start")
         val bitmap: Bitmap?
         GlobalScope.launch {
-            var bitmap: Bitmap? = generateImage(activity.applicationContext, data)
-            /*val drawable = resources.getDrawable(R.drawable.image, null)
-            val bitmapDrawable = drawable as BitmapDrawable
-            val bitmap = bitmapDrawable.bitmap*/
-            /*   try {
-                   val b: InputStream = assets.open("S.png")
-                   val bit: Bitmap = BitmapFactory.decodeStream(b)
-                   bitmap = bit
-               } catch (e1: IOException) {
-                   // TODO Auto-generated catch block
-                   e1.printStackTrace()
-               }*/
+            var bitmap: Bitmap? = createBitmap(
+                this@MainActivity,
+                BillData(
+                    paid = "Not Paid",
+                    token = "NKIOSKG3001",
+                    date = "2023-08-11",
+                    patientDetails = "Arun Kumar/25yrs/M, A123123",
+                    docterName = "Dr.Aby Thomas",
+                    transId = "8fi000w9w2",
+                    rrn = "R72345",
+                    billNo = "B8232323",
+                    consultationFee = "400",
+                    totalFee = "500",
+                    generatedDate = "14-070-2023 11:30:00 am"
+                )
+            )
+
             if (bitmap != null) {
                 runOnUiThread() {
                     binding.htmlToBitmap.setImageBitmap(bitmap)
@@ -101,40 +121,22 @@ class MainActivity : AppCompatActivity() {
             }
             bitmap?.let {
                 Log.d(TAG, "printReceipt.print: start")
-                PosUsbPrinter.print(activity.applicationContext, bitmap)
+                PosUsbPrinter.print(activity.applicationContext, bitmap,nPrintWidth = 600 )
             }
         }
 
     }
 
-    private fun createBitmap(activity: Activity){
-        val data: Map<String, Any> = mapOf(
-            "date" to Date().toLocaleString(),
-            "mode" to 12,
-            "amount" to 13000,
-            "customerId" to "12D233",
-            "transactionId" to "12DDDD3DQE",
-            "advance" to "2000")
-        var bitmap: Bitmap? = null
-        Log.d(TAG, "createBitmap: bitmap1 = $bitmap")
-        GlobalScope.launch{
-             bitmap = generateImage(activity.applicationContext, data)
-            Log.d(TAG, "createBitmap: bitmap2 = $bitmap")
-            if (bitmap != null){
-                Log.d(TAG, "createBitmap: bitmap size = ${(bitmap?.byteCount?.div(1024))}")
-                runOnUiThread(){
-                    binding.htmlToBitmap.setImageBitmap(bitmap)
-                }
-            }
-        }
+    private fun createBitmap(activity: Activity, billData: BillData): Bitmap? {
 
+        return generateImage(activity.applicationContext, billData)
 
     }
 
     override fun onDestroy() {
         super.onDestroy()
     }
-    
+
     companion object {
         private const val TAG: String = "MainActivity"
         private lateinit var mUsbManager: UsbManager
