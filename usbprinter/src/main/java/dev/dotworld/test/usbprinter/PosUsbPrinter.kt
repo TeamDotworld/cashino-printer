@@ -2,8 +2,10 @@ package dev.dotworld.test.usbprinter
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.app.PendingIntent
 import android.content.Context
 import android.content.DialogInterface
+import android.content.Intent
 import android.graphics.Bitmap
 import android.hardware.usb.UsbConstants
 import android.hardware.usb.UsbDevice
@@ -23,7 +25,7 @@ object PosUsbPrinter {
     private val TAG: String = "PosUsbPrinter"
     private val executorService: ExecutorService = Executors.newScheduledThreadPool(30)
     private var pos = Pos()
-
+    private const val ACTION_USB_PERMISSION = "dev.dotworld.test.usbprinter.USB_PERMISSION"
     @SuppressLint("StaticFieldLeak")
     private val usbPrinting = USBPrinting()
     private lateinit var mUsbManager: UsbManager
@@ -32,11 +34,35 @@ object PosUsbPrinter {
     private var devices: ArrayList<UsbDevice> = arrayListOf()
     // }
 
+    private lateinit var permissionIntent: PendingIntent
+
     fun posSetup(context: Context) {
         pos.Set(usbPrinting)
         usbPrinting.SetCallBack(context.getSystemService())
         mUsbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
+        permissionIntent = PendingIntent.getBroadcast(
+            context, 0, Intent(ACTION_USB_PERMISSION),
+            PendingIntent.FLAG_MUTABLE
+        )
         mDeviceList = mUsbManager.deviceList;
+        mDeviceList.forEach { (_, usbDevice) ->
+            Log.d(TAG, "onCreate: usbDevice ${usbDevice.deviceName} permission ${isPrinter(usbDevice)}")
+            if (isPrinter(usbDevice)) {
+                // Check if permission is already granted for the USB device
+                if (mUsbManager.hasPermission(usbDevice)) {
+                    // Permission already granted, you can access the USB device here
+                    Log.d(TAG, "onCreate: Permission already granted")
+                } else {
+                    // Permission not granted, request permission from the user
+                    Log.d(TAG, "onCreate: Permission not granted")
+                    mUsbManager.requestPermission(usbDevice, permissionIntent)
+                }
+            }
+        }
+    }
+
+    private fun isPrinter(usbDevice: UsbDevice): Boolean {
+        return usbDevice.getConfiguration(0).getInterface(0).interfaceClass == UsbConstants.USB_CLASS_PRINTER
     }
 
     fun usbDevice(): UsbDevice? {
@@ -69,22 +95,6 @@ object PosUsbPrinter {
         if(devices.isNotEmpty()){
             mDevice = devices.first()
         }
-        /*for (i in deviceName.indices) {
-            Log.d(TAG, "searchAndSelectUsbPost: $i")
-            if (devices[i-1].getConfiguration(0)
-                    .getInterface(0).interfaceClass == UsbConstants.USB_CLASS_PRINTER
-            ) {
-                d[i] = "Product Name = ${devices[i-1].productName} / Type =  ${
-                    devices[i-1].getConfiguration(0).getInterface(0).interfaceClass
-                }"
-            }
-        }*/
-        /*Log.d(TAG, "getDeviceToUsbPort: $deviceName : ${mDeviceList.size}")
-        AlertDialog.Builder(context)
-            .setTitle("Select Printer")
-            .setItems(d, DialogInterface.OnClickListener() { _, p ->
-                mDevice = devices[p]
-            }).create().show()*/
         return mDevice
     }
 
