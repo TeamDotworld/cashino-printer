@@ -1,18 +1,11 @@
 package dev.dotworld.test.usbprinter
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
-import android.app.PendingIntent
 import android.content.Context
-import android.content.DialogInterface
-import android.content.Intent
 import android.graphics.Bitmap
-import android.hardware.usb.UsbConstants
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.core.content.getSystemService
 import com.lvrenyang.io.Pos
 import com.lvrenyang.io.USBPrinting
@@ -21,116 +14,28 @@ import java.util.concurrent.Executors
 
 object PosUsbPrinter {
 
-    //companion object {
     private val TAG: String = "PosUsbPrinter"
     private val executorService: ExecutorService = Executors.newScheduledThreadPool(30)
     private var pos = Pos()
-    private const val ACTION_USB_PERMISSION = "dev.dotworld.test.usbprinter.USB_PERMISSION"
+
     @SuppressLint("StaticFieldLeak")
     private val usbPrinting = USBPrinting()
     private lateinit var mUsbManager: UsbManager
     private var mDevice: UsbDevice? = null
-    private lateinit var mDeviceList: HashMap<String, UsbDevice>
-    private var devices: ArrayList<UsbDevice> = arrayListOf()
-    // }
-
-    private lateinit var permissionIntent: PendingIntent
 
     fun posSetup(context: Context) {
         pos.Set(usbPrinting)
         usbPrinting.SetCallBack(context.getSystemService())
         mUsbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
-        permissionIntent = PendingIntent.getBroadcast(
-            context, 0, Intent(ACTION_USB_PERMISSION),
-            PendingIntent.FLAG_MUTABLE
-        )
-        mDeviceList = mUsbManager.deviceList;
-        mDeviceList.forEach { (_, usbDevice) ->
-            Log.d(TAG, "onCreate: usbDevice ${usbDevice.deviceName} permission ${isPrinter(usbDevice)}")
-            if (isPrinter(usbDevice)) {
-                // Check if permission is already granted for the USB device
-                if (mUsbManager.hasPermission(usbDevice)) {
-                    // Permission already granted, you can access the USB device here
-                    Log.d(TAG, "onCreate: Permission already granted")
-                } else {
-                    // Permission not granted, request permission from the user
-                    Log.d(TAG, "onCreate: Permission not granted")
-                    mUsbManager.requestPermission(usbDevice, permissionIntent)
-                }
-            }
+    }
+
+    var currentUsbDevice: UsbDevice?
+        get() = mDevice
+        set(value) {
+            mDevice = value
         }
-    }
 
-    private fun isPrinter(usbDevice: UsbDevice): Boolean {
-        return usbDevice.getConfiguration(0).getInterface(0).interfaceClass == UsbConstants.USB_CLASS_PRINTER
-    }
-
-    fun usbDevice(): UsbDevice? {
-        return mDevice
-    }
-
-    fun setUsbDevice(de: UsbDevice) {
-        mDevice = de
-    }
-
-
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun searchAndSelectUsbPost(context: Context): UsbDevice? {
-        Log.d(TAG, "searchAndSelectUsbPost: start")
-        var device: UsbDevice? = null
-        devices.clear()
-        val deviceName: List<String> = mDeviceList.keys.map { it }
-        var d: Array<String?> = arrayOfNulls(deviceName.size)
-        val deviceIterator: Iterator<UsbDevice> = mDeviceList.values.iterator()
-        while (deviceIterator.hasNext()) {
-            val d = deviceIterator.next()
-            Log.d(TAG, "searchAndSelectUsbPost: devices = $d")
-            if (d.configurationCount != 0){
-                if (d.getConfiguration(0).getInterface(0).interfaceClass == UsbConstants.USB_CLASS_PRINTER
-                ) {
-                    devices.add(d)
-                }
-            }
-        }
-        if(devices.isNotEmpty()){
-            mDevice = devices.first()
-        }
-        return mDevice
-    }
-
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun getConnectedDevices(): ArrayList<UsbDevice> {
-        Log.d(TAG, "searchAndSelectUsbPost: start")
-        var device: UsbDevice? = null
-        devices.clear()
-        val deviceName: List<String> = mDeviceList.keys.map { it }
-        var d: Array<String?> = arrayOfNulls(deviceName.size)
-        val deviceIterator: Iterator<UsbDevice> = mDeviceList.values.iterator()
-        while (deviceIterator.hasNext()) {
-            val d = deviceIterator.next()
-            Log.d(TAG, "searchAndSelectUsbPost: devices = $d")
-            if (d.configurationCount != 0){
-                if (d.getConfiguration(0).getInterface(0).interfaceClass == UsbConstants.USB_CLASS_PRINTER
-                ) {
-                    devices.add(d)
-                }
-            }
-        }
-        return devices
-    }
-
-    fun usbPrintOpen(context: Context) {
-        executorService.submit(
-            TaskOpen(
-                usbPrinting,
-                mUsbManager,
-                mDevice,
-                context
-            )
-        )
-    }
-
-    fun usbPrintOpen(context: Context,mDevice: UsbDevice) {
+    fun usbPrintOpen(context: Context, mDevice: UsbDevice) {
         executorService.submit(
             TaskOpen(
                 usbPrinting,
@@ -152,51 +57,41 @@ object PosUsbPrinter {
 
     fun print(
         c: Context,
-        nBitmap: Bitmap,
-        nData: String? = null,
-        nPrintWidth: Int = 384,
-        bCutter: Boolean = true,
-        bDrawer: Boolean = false,
-        bBeeper: Boolean = true,
-        nPrintCount: Int = 1,
-        nPrintContent: Int = 1,
-        nCompressMethod: Int = 0
+        bitmap: Bitmap,
+        data: String? = null,
+        printWidth: Int = 384,
+        cutPaper: Boolean = true,
+        isHalfCutPaper: Boolean = true,
+        drawer: Boolean = false,
+        beeper: Boolean = true,
+        printCount: Int = 1,
+        printContent: Int = 1,
+        compressMethod: Int = 0
     ) {
         executorService.submit(
             TaskPrint(
                 pos,
                 c,
-                nPrintWidth,
-                bCutter,
-                bDrawer,
-                bBeeper,
-                nPrintCount,
-                nPrintContent,
-                nCompressMethod,
-                nData,
-                nBitmap
+                printWidth,
+                cutPaper,
+                isHalfCutPaper,
+                drawer,
+                beeper,
+                printCount,
+                printContent,
+                compressMethod,
+                data,
+                bitmap
             )
         )
     }
 
     class TaskOpen(
-        usb: USBPrinting?,
-        usbManager: UsbManager?,
-        usbDevice: UsbDevice?,
-        context: Context?
+        private val usb: USBPrinting?,
+        private val usbManager: UsbManager?,
+        private val usbDevice: UsbDevice?,
+        private val context: Context?
     ) : Runnable {
-        var usb: USBPrinting? = null
-        var usbManager: UsbManager? = null
-        var usbDevice: UsbDevice? = null
-        var context: Context? = null
-
-        init {
-            this.usb = usb
-            this.usbManager = usbManager
-            this.usbDevice = usbDevice
-            this.context = context
-        }
-
         override fun run() {
 
             Log.d(TAG, "TaskOpen run: ${usbDevice?.deviceName} / ${usb?.IsOpened()} / ")
@@ -214,13 +109,7 @@ object PosUsbPrinter {
 
     }
 
-    class TaskClose(usb: USBPrinting?) : Runnable {
-        var usb: USBPrinting? = null
-
-        init {
-            this.usb = usb
-        }
-
+    class TaskClose(private val usb: USBPrinting?) : Runnable {
         override fun run() {
             usb?.Close() ?: Log.d(TAG, "TaskClose run: usb printer dis connected")
             usb?.SkipAvailable()
@@ -228,57 +117,32 @@ object PosUsbPrinter {
     }
 
     class TaskPrint(
-        pos: Pos?, c: Context,
-        nPrintWidth: Int = 384,
-        bCutter: Boolean = true,
-        bDrawer: Boolean = false,
-        bBeeper: Boolean = true,
-        nPrintCount: Int = 1,
-        nPrintContent: Int = 1,
-        nCompressMethod: Int = 0,
-        nData: String? = null,
-        nBitmap: Bitmap? = null
+        private val pos: Pos?, val c: Context,
+        private val printWidth: Int = 384,
+        private val paperCutter: Boolean = true,
+        private val isHalfCutPaper: Boolean = true,
+        private val drawer: Boolean = false,
+        private val beeper: Boolean = true,
+        private val printCount: Int = 1,
+        private val printContent: Int = 1,
+        private val compressMethod: Int = 0,
+        private val data: String? = null,
+        private val bitmap: Bitmap? = null
     ) : Runnable {
-        private var pos: Pos? = null
-        private var context: Context
-        private var printWidth: Int
-        private var cutter: Boolean
-        private var drawer: Boolean
-        private var beeper: Boolean
-        private var printCount: Int
-        private var printContent: Int
-        private var compressMethod: Int
-        private var data: String?
-        private var image: Bitmap?
-
-        init {
-            this.pos = pos
-            this.context = c
-            this.printWidth = nPrintWidth
-            this.cutter = bCutter
-            this.drawer = bDrawer
-            this.beeper = bBeeper
-            this.printCount = nPrintCount
-            this.printContent = nPrintContent
-            this.compressMethod = nCompressMethod
-            this.data = nData
-            this.image = nBitmap
-        }
-
         override fun run() {
-            // TODO Auto-generated method stub
             val bPrintResult: Int = Prints.PrintTicket(
-                context,
+                c,
                 pos,
                 printWidth,
-                cutter,
+                paperCutter,
+                isHalfCutPaper,
                 drawer,
                 beeper,
                 printCount,
                 printContent,
                 compressMethod,
                 data,
-                image
+                bitmap
             )
             val bIsOpened = pos!!.GetIO().IsOpened()
             Log.d(
@@ -288,13 +152,7 @@ object PosUsbPrinter {
         }
     }
 
-    class TaskSkip(usb: USBPrinting?) : Runnable {
-        var usb: USBPrinting? = null
-
-        init {
-            this.usb = usb
-        }
-
+    class TaskSkip(private val usb: USBPrinting?) : Runnable {
         override fun run() {
             usb?.SkipAvailable() ?: Log.d(TAG, "TaskSkip run: usb disconnected")
             Log.d(TAG, "TaskSkip : ${usb?.IsOpened()}")

@@ -1,16 +1,0 @@
-
-]kotlin:S6619O">Remove this useless non-null assertion !!, it always succeeds.(Ä–Ç¾8İøÂìà1
-Bkotlin:S125*"Remove this commented out code.(õÉí´ıÿÿÿÿ8ŞøÂìà1
-Bkotlin:S1259"Remove this commented out code.(˜ÒÚÑıÿÿÿÿ8àøÂìà1
-ykotlin:S6306"TUsing "GlobalScope" here leads to the breaking of structured concurrency principles.(š£Œúÿÿÿÿ8ıÛ ÑÜ1
-xkotlin:S6306h"TUsing "GlobalScope" here leads to the breaking of structured concurrency principles.(š£Œúÿÿÿÿ8şÛ ÑÜ1
-Pkotlin:S1481Œ"+Remove this unused "bitmap" local variable.(Ğš×¡ùÿÿÿÿ8€Ü ÑÜ1
->kotlin:S1128"Remove this unused import.(å÷÷Şüÿÿÿÿ8­ºéÕÜ1
-8kotlin:S1128"Remove this unused import.(âG8øÍğÕÜ1
->kotlin:S1128	"Remove this unused import.(ìõ²Øıÿÿÿÿ8­ºéÕÜ1
-8kotlin:S1128
-"Remove this unused import.(Ş‚½8îøÂìà1
-9kotlin:S1128"Remove this unused import.(ï‡Û™8Ê˜ñÕÜ1
->kotlin:S1128"Remove this unused import.(¤¿Ë¸ıÿÿÿÿ8…ìèÕÜ1
->kotlin:S1128"Remove this unused import.(Ş¥›üøÿÿÿÿ8ƒÜ ÑÜ1
-9kotlin:S1128"Remove this unused import.(´Ùí8ùÍğÕÜ1

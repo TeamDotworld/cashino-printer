@@ -21,7 +21,8 @@ public class Prints {
             Context ctx,
             Pos pos,
             int nPrintWidth,
-            boolean bCutter,
+            boolean cutPaper,
+            boolean isHalfCutPaper,
             boolean bDrawer,
             boolean bBeeper,
             int nCount,
@@ -90,7 +91,7 @@ public class Prints {
 
                 if (bBeeper)
                     pos.POS_Beep(1, 5);
-                if (bCutter && nCount == 1)
+                if (cutPaper && nCount == 1)
                     pos.POS_FullCutPaper();
                 if (bDrawer)
                     pos.POS_KickDrawer(0, 100);

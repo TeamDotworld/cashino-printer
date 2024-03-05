@@ -1,9 +1,9 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <!-- Base application theme. -->
-    <style name="Base.Theme.CashinoPrinter" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Base.Theme.USBAndroid13" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 
-    <style name="Theme.CashinoPrinter" parent="Base.Theme.CashinoPrinter" />
+    <style name="Theme.USBAndroid13" parent="Base.Theme.USBAndroid13" />
 </resources>
