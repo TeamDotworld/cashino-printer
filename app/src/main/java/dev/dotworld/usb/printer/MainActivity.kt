@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.hardware.usb.UsbConstants
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
@@ -15,17 +16,41 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import dev.dotworld.test.usbprinter.PosUsbPrinter
+import dev.dotworld.usb.printer.databinding.ActivityMainBinding
 
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityMainBinding
+    private var printBitmap: Bitmap? = null
+    private var device: UsbDevice? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         PosUsbPrinter.posSetup(this)
         initPrintDevices()
+
+        printBitmap = BitmapFactory.decodeResource(resources, R.drawable.hello)
+
+        binding.preview.setImageBitmap(printBitmap)
+
+        binding.print.setOnClickListener {
+            if (printBitmap != null && device != null) {
+                onPrintRequest(printBitmap!!, device!!)
+            } else {
+                Toast.makeText(
+                    this,
+                    "print bitmap null or printer not found",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
     }
 
     @SuppressLint("MutableImplicitPendingIntent")
@@ -37,7 +62,8 @@ class MainActivity : AppCompatActivity() {
             val hasPermission = usbManager.hasPermission(it)
             if (!hasPermission) {
                 Log.i(TAG, "onCreate: has permission for ${it.deviceName}")
-                onPrintRequest(Bitmap.createBitmap(100, 50, Bitmap.Config.ARGB_8888), it)
+                //onPrintRequest(Bitmap.createBitmap(100, 50, Bitmap.Config.ARGB_8888), it)
+                device = it
             } else {
                 val permissionIntent = PendingIntent.getBroadcast(
                     this, 0, Intent(actionUsbPermission),
@@ -82,10 +108,11 @@ class MainActivity : AppCompatActivity() {
                         device?.apply {
                             // call method to set up device communication
                             Log.i(TAG, "onReceive: permission granted for device $device $")
-                            onPrintRequest(
-                                Bitmap.createBitmap(100, 50, Bitmap.Config.ARGB_8888),
-                                this
-                            )
+                            this@MainActivity.device = this
+                            /*  onPrintRequest(
+                                  Bitmap.createBitmap(100, 50, Bitmap.Config.ARGB_8888),
+                                  this
+                              )*/
                         }
                     } else {
                         Log.d(TAG, "permission denied for device $device")
