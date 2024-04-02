@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
         printers.forEach {
             Log.i(TAG, "onCreate: usbDevice $it")
             val hasPermission = usbManager.hasPermission(it)
-            if (!hasPermission) {
+            if (hasPermission) {
                 Log.i(TAG, "onCreate: has permission for ${it.deviceName}")
                 //onPrintRequest(Bitmap.createBitmap(100, 50, Bitmap.Config.ARGB_8888), it)
                 device = it
